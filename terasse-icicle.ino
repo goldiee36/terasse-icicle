@@ -1,5 +1,5 @@
 #define lampSwitchTimeout 4 //seconds
-#define icicleSwitchTimeout 60 //seconds
+#define icicleSwitchTimeout 30 //seconds
 #define autoSwitchoffTimer 10 //minutes
 #define lightThreshold 150 //lower is lighter, higher is darker
 
@@ -10,6 +10,7 @@
 #define ledPin 13
 
 boolean lampState = false;
+boolean iceState = false;
 unsigned long lastMovement_millis = 10000000;
 unsigned long lastIcicleSwitch_millis = 10000000;
 
@@ -43,13 +44,15 @@ void loop() {
     lampState = false;
   }
   
-  if (analogRead(lightSensorPin) > lightThreshold && (millis() - lastIcicleSwitch_millis) > ((unsigned long)icicleSwitchTimeout * 1000)) {
+  if (iceState == false && analogRead(lightSensorPin) > lightThreshold && (millis() - lastIcicleSwitch_millis) > ((unsigned long)icicleSwitchTimeout * 1000)) {
     digitalWrite(iciclePin, LOW); //turn ON icicle
     lastIcicleSwitch_millis = millis();
+    iceState = true;
   }
-  if (lampState == false && analogRead(lightSensorPin) <= lightThreshold && (millis() - lastIcicleSwitch_millis) > ((unsigned long)icicleSwitchTimeout * 1000)) {
+  if (iceState == true && lampState == false && analogRead(lightSensorPin) <= lightThreshold && (millis() - lastIcicleSwitch_millis) > ((unsigned long)icicleSwitchTimeout * 1000)) {
     digitalWrite(iciclePin, HIGH); //turn OFF icicle
     lastIcicleSwitch_millis = millis();
+    iceState = false;
   }
   //digitalWrite(ledPin, digitalRead(pirPin));
   //Serial.println(analogRead(lightSensorPin));  
