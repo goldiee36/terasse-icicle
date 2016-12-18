@@ -1,8 +1,8 @@
 #define lampSwitchTimeout 4 //seconds
-#define icicleSwitchTimeout 60 //seconds
+#define icicleSwitchTimeout 600 //seconds
 #define autoSwitchoffTimer 10 //minutes
-#define lightThresholdLamp 150 //lower is lighter, higher is darker
-#define lightThresholdIcicle 175
+#define lightThresholdLamp 160 //lower is lighter, higher is darker
+#define lightThresholdIcicle 200
 
 #define iciclePin 12
 #define lampPin 13
@@ -14,6 +14,10 @@ boolean lampState = false;
 boolean iceState = false;
 unsigned long lastMovement_millis = 10000000;
 unsigned long lastIcicleSwitch_millis = 10000000;
+
+unsigned long lastLightCheck_millis = 10000000;
+long darknesscounter = 0;
+long lightnesscounter = 0;
 
 void setup()
 {
@@ -38,25 +42,46 @@ void loop() {
     lastMovement_millis = millis();
     lampState = false;
   }
-  if ( lampState == true && (millis() - lastMovement_millis) > ((unsigned long)autoSwitchoffTimer * 60 * 1000) ) {
+  if ( lampState == true && (millis() - lastMovement_millis) > ((unsigned long)autoSwitchoffTimer * 60 * 1000) ) { //lamp autoswitchoff
     digitalWrite(lampPin, HIGH); //turn OFF terasse lamp
     lampState = false;
   }
-  
-  if ( iceState == false && analogRead(lightSensorPin) > (lightThresholdIcicle + 15) && (millis() - lastIcicleSwitch_millis) > ((unsigned long)icicleSwitchTimeout * 1000) ) {
-    digitalWrite(iciclePin, LOW); //turn ON icicle
-    lastIcicleSwitch_millis = millis();
-    iceState = true;
+
+
+
+
+
+  if ( (millis() - lastLightCheck_millis) > 100 ) {
+      lastLightCheck_millis = millis();
+      if (analogRead(lightSensorPin) > lightThresholdIcicle) {//darkness
+        darknesscounter = darknesscounter > 65500 ? 65500 : darknesscounter++ ;
+      }
+      else {//ligthness
+        lightnesscounter = lightnesscounter > 65500 ? 65500 : lightnesscounter++ ;
+      }
+    }    
+    
+  if ( iceState == false ) {    
+    if (darknesscounter > 30) {//turn ON icicle
+      lightnesscounter = 0;
+      darknesscounter = 0;
+      digitalWrite(iciclePin, LOW);
+      iceState = true;
+    }
   }
-  if (  iceState == true &&
-        lampState == false &&
-        (millis() - lastIcicleSwitch_millis) > ((unsigned long)icicleSwitchTimeout * 1000) &&
-        (millis() - lastMovement_millis) > 500 && //wait a little after the lamp turned off/on
-        analogRead(lightSensorPin) <= (lightThresholdIcicle - 15) ) {
-    digitalWrite(iciclePin, HIGH); //turn OFF icicle
-    lastIcicleSwitch_millis = millis();
-    iceState = false;
-  }
+  else {    
+    if (darknesscounter > 10) {//prolonging the icicle with 5 minutes
+      lightnesscounter = lightnesscounter <= 3000 ? 0 : lightnesscounter - 3000 ;
+      darknesscounter = 0;
+    }    
+    
+    if (lightnesscounter > 6000) {//turn OFF icicle // 6000 means 10 minutes
+      lightnesscounter = 0;
+      darknesscounter = -600; //1 minute extra switch delay
+      digitalWrite(iciclePin, HIGH);
+      iceState = false;
+    }
+  } 
   
   
 } //end of main LOOP
