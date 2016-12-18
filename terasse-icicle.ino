@@ -2,7 +2,7 @@
 #define icicleSwitchTimeout 600 //seconds
 #define autoSwitchoffTimer 10 //minutes
 #define lightThresholdLamp 160 //lower is lighter, higher is darker
-#define lightThresholdIcicle 200
+#define lightThresholdIcicle 195
 
 #define iciclePin 12
 #define lampPin 13
@@ -54,10 +54,10 @@ void loop() {
   if ( (millis() - lastLightCheck_millis) > 100 ) {
       lastLightCheck_millis = millis();
       if (analogRead(lightSensorPin) > lightThresholdIcicle) {//darkness
-        darknesscounter = darknesscounter > 65500 ? 65500 : darknesscounter++ ;
+        darknesscounter = darknesscounter > 65500 ? 65500 : darknesscounter + 1 ;
       }
       else {//ligthness
-        lightnesscounter = lightnesscounter > 65500 ? 65500 : lightnesscounter++ ;
+        lightnesscounter = lightnesscounter > 65500 ? 65500 : lightnesscounter + 1 ;
       }
     }    
     
